@@ -70,4 +70,4 @@ Applications are stored only in your browser's `localStorage`. This means:
 
 ## License
 
-This project is for personal use. Add a license of your choice if you plan to share or open-source it.
+MIT License
