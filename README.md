@@ -1,16 +1,73 @@
-# React + Vite
+# Job Tracker App
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+A simple, fast application log for tracking job and internship applications — built with React and Vite. All data is stored locally in your browser, so there's no backend or account needed.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Log applications** with company, role, location, status, posting link, date applied, and notes
+- **Job vs. Internship** — tag each entry as a Job or Internship and filter by type
+- **Status tracking** — Applied, Interview, Offer, Rejected, Withdrawn, with a quick-update panel per entry
+- **Search and filter** by company, role, location, status, and type
+- **Sortable columns** — click any column header to sort
+- **Clickable company links** — click a company name to jump straight to its job posting
+- **Stats overview** — see counts per status at a glance
+- **Responsive layout** — adapts from desktop down to mobile
+- **Local persistence** — your data is saved to the browser's `localStorage`, so it survives page reloads
 
-## React Compiler
+## Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- [React](https://react.dev/)
+- [Vite](https://vitejs.dev/)
 
-## Expanding the Oxlint configuration
+## Getting Started
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) (v18 or later recommended)
+- npm
+
+### Installation
+
+```bash
+git clone https://github.com/keerthanathummala/Job-Tracker-App.git
+cd Job-Tracker-App
+npm install
+```
+
+### Run locally
+
+```bash
+npm run dev
+```
+
+Then open the URL shown in your terminal (usually `http://localhost:5173`).
+
+### Build for production
+
+```bash
+npm run build
+```
+
+The optimized output is generated in the `dist/` folder.
+
+## Deployment
+
+This app is a static site and deploys easily to [Vercel](https://vercel.com):
+
+1. Push your repo to GitHub.
+2. Import the repo in Vercel (auto-detects the Vite setup).
+3. Click **Deploy** — you'll get a public URL to share.
+
+Any push to `main` automatically redeploys the live site.
+
+## Data & Privacy
+
+Applications are stored only in your browser's `localStorage`. This means:
+
+- Your data stays on your device and is never sent to a server.
+- Each browser/device has its own separate list — data isn't shared between users or synced across devices.
+- Clearing your browser's site data will erase your saved applications.
+
+## License
+
+This project is for personal use. Add a license of your choice if you plan to share or open-source it.
