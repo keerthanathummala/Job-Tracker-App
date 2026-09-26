@@ -6,12 +6,19 @@ const STATUSES = ["Applied", "Interview", "Offer", "Rejected", "Withdrawn"];
 
 const LOCATIONS = ["Remote", "In-person", "Hybrid"];
 
+const TYPES = ["Job", "Internship"];
+
 const STATUS_STYLE = {
   Applied: { color: "#5B6470", bg: "#E9EBEC" },
   Interview: { color: "#8A5D18", bg: "#F3E6C8" },
   Offer: { color: "#2E6B41", bg: "#DCEADD" },
   Rejected: { color: "#8C3D28", bg: "#F1DDD4" },
   Withdrawn: { color: "#726E63", bg: "#E6E3D8" },
+};
+
+const TYPE_STYLE = {
+  Job: { color: "#2E5A8A", bg: "#DCE6F1" },
+  Internship: { color: "#7A4C9E", bg: "#EBE0F3" },
 };
 
 function uid() {
@@ -28,13 +35,14 @@ function formatDate(iso) {
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
 
-const EMPTY_DRAFT = { company: "", role: "", location: LOCATIONS[0], url: "", dateApplied: todayISO(), status: "Applied", notes: "" };
+const EMPTY_DRAFT = { company: "", role: "", location: LOCATIONS[0], url: "", dateApplied: todayISO(), status: "Applied", type: TYPES[0], notes: "" };
 
 export default function App() {
   const [apps, setApps] = useState(null); // null = loading
   const [draft, setDraft] = useState(EMPTY_DRAFT);
   const [showForm, setShowForm] = useState(false);
   const [filter, setFilter] = useState("All");
+  const [typeFilter, setTypeFilter] = useState("All");
   const [query, setQuery] = useState("");
   const [sortKey, setSortKey] = useState("dateApplied");
   const [sortDir, setSortDir] = useState("desc");
@@ -44,7 +52,10 @@ export default function App() {
   const loadApps = useCallback(async () => {
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
-      setApps(raw ? JSON.parse(raw) : []);
+      const parsed = raw ? JSON.parse(raw) : [];
+      // Older entries saved before "type" existed default to "Job" so they
+      // still show up under a type filter instead of disappearing.
+      setApps(parsed.map((a) => ({ type: TYPES[0], ...a })));
     } catch (e) {
       // Missing key, corrupt JSON, or storage unavailable — treat it as
       // an empty log rather than an error that blocks the person from adding one.
@@ -72,8 +83,8 @@ export default function App() {
     }
   }, []);
 
-  const openNewForm = () => {
-    setDraft(EMPTY_DRAFT);
+  const openNewForm = (type) => {
+    setDraft({ ...EMPTY_DRAFT, type: type || TYPES[0] });
     setEditingId(null);
     setShowForm(true);
   };
@@ -111,13 +122,16 @@ export default function App() {
 
   const stats = useMemo(() => {
     const base = { Applied: 0, Interview: 0, Offer: 0, Rejected: 0, Withdrawn: 0 };
-    (apps || []).forEach((a) => { base[a.status] = (base[a.status] || 0) + 1; });
+    (apps || [])
+      .filter((a) => typeFilter === "All" || a.type === typeFilter)
+      .forEach((a) => { base[a.status] = (base[a.status] || 0) + 1; });
     return base;
-  }, [apps]);
+  }, [apps, typeFilter]);
 
   const visible = useMemo(() => {
     if (!apps) return [];
     let list = apps;
+    if (typeFilter !== "All") list = list.filter((a) => a.type === typeFilter);
     if (filter !== "All") list = list.filter((a) => a.status === filter);
     if (query.trim()) {
       const q = query.trim().toLowerCase();
@@ -134,7 +148,7 @@ export default function App() {
       return 0;
     });
     return list;
-  }, [apps, filter, query, sortKey, sortDir]);
+  }, [apps, filter, typeFilter, query, sortKey, sortDir]);
 
   const toggleSort = (key) => {
     if (sortKey === key) setSortDir(sortDir === "asc" ? "desc" : "asc");
@@ -148,6 +162,21 @@ export default function App() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap');
 
+        html, body {
+          height: 100%;
+          width: 100%;
+          margin: 0;
+          padding: 0;
+          background: #EEEBE2;
+        }
+        #root {
+          min-height: 100vh;
+          width: 100%;
+          margin: 0;
+          display: block;
+          place-items: initial;
+        }
+
         .log-root {
           --paper: #EEEBE2;
           --paper-raised: #F8F6EF;
@@ -159,7 +188,7 @@ export default function App() {
           font-family: 'IBM Plex Sans', sans-serif;
           color: var(--ink);
           background: var(--paper);
-          min-height: 100%;
+          min-height: 100vh;
           width: 100%;
           padding: clamp(20px, 5vw, 40px) clamp(14px, 4vw, 28px) 60px;
           box-sizing: border-box;
@@ -241,11 +270,26 @@ export default function App() {
 
         .lr-toolbar {
           max-width: 980px;
-          margin: 0 auto 14px;
+          margin: 0 auto 10px;
           display: flex;
           gap: 10px;
           flex-wrap: wrap;
           align-items: center;
+        }
+        .lr-toolbar-row {
+          max-width: 980px;
+          margin: 0 auto 14px;
+          display: flex;
+          gap: 8px;
+          flex-wrap: wrap;
+          align-items: center;
+        }
+        .lr-toolbar-label {
+          font-size: 11.5px;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+          color: var(--ink-soft);
+          margin-right: 4px;
         }
         .lr-search {
           flex: 1;
@@ -282,6 +326,30 @@ export default function App() {
           border: 1px solid var(--rule);
           border-radius: 5px;
           padding: 20px;
+        }
+        .lr-form-type {
+          display: flex;
+          gap: 8px;
+          margin-bottom: 16px;
+          padding-bottom: 16px;
+          border-bottom: 1px dashed var(--rule);
+        }
+        .lr-type-toggle {
+          flex: 1;
+          border: 1px solid var(--rule);
+          background: #fff;
+          color: var(--ink-soft);
+          font-family: inherit;
+          font-size: 14px;
+          font-weight: 500;
+          padding: 10px;
+          border-radius: 4px;
+          cursor: pointer;
+        }
+        .lr-type-toggle.active {
+          border-color: var(--accent);
+          background: var(--accent-soft);
+          color: var(--accent);
         }
         .lr-form-grid {
           display: grid;
@@ -384,7 +452,16 @@ export default function App() {
           color: var(--accent);
           text-decoration-color: var(--accent);
         }
-        .lr-role { color: var(--ink-soft); font-size: 13.5px; }
+        .lr-role { color: var(--ink-soft); font-size: 13.5px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .lr-type-tag {
+          display: inline-block;
+          padding: 2px 8px;
+          border-radius: 20px;
+          font-size: 10.5px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.02em;
+        }
         .lr-loc { color: var(--ink-soft); font-size: 13.5px; }
         .lr-date { font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; color: var(--ink-soft); }
         .lr-status-pill {
@@ -415,13 +492,14 @@ export default function App() {
         .lr-status-opt {
           border: 1px solid var(--rule);
           background: #fff;
+          color: #C15C82;
           font-size: 12px;
           padding: 5px 10px;
           border-radius: 20px;
           cursor: pointer;
           font-family: inherit;
         }
-        .lr-status-opt.current { border-color: var(--accent); font-weight: 600; }
+        .lr-status-opt.current { border-color: var(--accent); color: var(--accent); font-weight: 600; }
         .lr-detail-actions { display: flex; gap: 10px; margin-top: 10px; }
         .lr-link-btn { background: none; border: none; color: var(--accent); font-family: inherit; font-size: 13px; cursor: pointer; padding: 0; text-decoration: underline; }
         .lr-link-btn.danger { color: #A34A32; }
@@ -458,6 +536,7 @@ export default function App() {
           .lr-stats { gap: 8px; }
           .lr-stat { min-width: calc(50% - 4px); }
           .lr-detail-grid { flex-direction: column; gap: 16px; }
+          .lr-form-type { flex-direction: column; }
         }
       `}</style>
 
@@ -467,7 +546,7 @@ export default function App() {
           <p className="lr-sub">Every place you've applied, in one place.</p>
         </div>
         <div className="lr-header-right">
-          <button className="lr-add-btn" onClick={openNewForm}>
+          <button className="lr-add-btn" onClick={() => openNewForm()}>
             + Add application
           </button>
         </div>
@@ -484,6 +563,18 @@ export default function App() {
 
       {showForm && (
         <div className="lr-form-wrap">
+          <div className="lr-form-type">
+            {TYPES.map((t) => (
+              <button
+                key={t}
+                type="button"
+                className={`lr-type-toggle ${draft.type === t ? "active" : ""}`}
+                onClick={() => setDraft({ ...draft, type: t })}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
           <div className="lr-form-grid">
             <div className="lr-field">
               <label>Company *</label>
@@ -537,6 +628,18 @@ export default function App() {
 
       <div className="lr-toolbar">
         <input className="lr-search" placeholder="Search company, role, location…" value={query} onChange={(e) => setQuery(e.target.value)} />
+      </div>
+
+      <div className="lr-toolbar-row">
+        <span className="lr-toolbar-label">Type</span>
+        <button className={`lr-filter-chip ${typeFilter === "All" ? "active" : ""}`} onClick={() => setTypeFilter("All")}>All</button>
+        {TYPES.map((t) => (
+          <button key={t} className={`lr-filter-chip ${typeFilter === t ? "active" : ""}`} onClick={() => setTypeFilter(t)}>{t}</button>
+        ))}
+      </div>
+
+      <div className="lr-toolbar-row">
+        <span className="lr-toolbar-label">Status</span>
         <button className={`lr-filter-chip ${filter === "All" ? "active" : ""}`} onClick={() => setFilter("All")}>All</button>
         {STATUSES.map((s) => (
           <button key={s} className={`lr-filter-chip ${filter === s ? "active" : ""}`} onClick={() => setFilter(s)}>{s}</button>
@@ -563,6 +666,7 @@ export default function App() {
             </div>
             {visible.map((a) => {
               const st = STATUS_STYLE[a.status] || STATUS_STYLE.Applied;
+              const tt = TYPE_STYLE[a.type] || TYPE_STYLE.Job;
               const isOpen = expandedId === a.id;
               return (
                 <React.Fragment key={a.id}>
@@ -574,7 +678,10 @@ export default function App() {
                     >
                       {a.company}
                     </div>
-                    <div className="lr-role">{a.role}</div>
+                    <div className="lr-role">
+                      {a.role}
+                      <span className="lr-type-tag" style={{ color: tt.color, background: tt.bg }}>{a.type}</span>
+                    </div>
                     <div className="lr-loc">{a.location || "—"}</div>
                     <div className="lr-date">{formatDate(a.dateApplied)}</div>
                     <div><span className="lr-status-pill" style={{ color: st.color, background: st.bg }}>{a.status}</span></div>
