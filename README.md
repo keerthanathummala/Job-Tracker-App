@@ -1,5 +1,7 @@
 # Job Tracker App
 
+> **Review only.** You may read this code and try the project. Downloading, forking or reusing it needs permission from k.thummala08@gmail.com. See [LICENSE](LICENSE).
+
 A simple, fast application log for tracking job and internship applications — built with React and Vite. All data is stored locally in your browser, so there's no backend or account needed.
 
 ## Features
@@ -68,6 +70,8 @@ Applications are stored only in your browser's `localStorage`. This means:
 - Each browser/device has its own separate list — data isn't shared between users or synced across devices.
 - Clearing your browser's site data will erase your saved applications.
 
-## License
+## Licence and permissions
 
-MIT License
+Copyright © 2026 Keerthana Thummala. All rights reserved.
+
+This code is shared for **review only**. You're welcome to read it and try the project. Downloading, cloning, forking, copying or reusing any part of it needs written permission. To ask, email **k.thummala08@gmail.com**. See [LICENSE](LICENSE).
